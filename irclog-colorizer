@@ -1,0 +1,28 @@
+#!/bin/bash
+
+PYGMENTS_STYLE=fruity
+
+echo 'Content-type: text/html'
+echo ''
+
+tmpfile=$(mktemp)
+
+function cleanup {
+    rm -rf "$tmpfile"
+}
+trap cleanup EXIT
+
+if [ ! -f "$tmpfile" ]
+then
+    echo '<strong>Could not create temporary file.</strong>'
+    exit 1
+fi
+
+datestr_orig=$(basename "$PATH_TRANSLATED")
+datestr_orig=${datestr_orig%%.log}
+datestr_new=$(date -d "$datestr_orig" +"%b %d" 2>&1)
+
+#cat "$PATH_TRANSLATED"
+sed "s/\[\([[:digit:]]\{2\}:[[:digit:]]\{2\}:[[:digit:]]\{2\}\)\]/${datestr_new} \1/" "$PATH_TRANSLATED" | \
+    pygmentize -l irc -O full,style=$PYGMENTS_STYLE -f html -o "$tmpfile"
+cat "$tmpfile"
