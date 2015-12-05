@@ -9,16 +9,18 @@ datestr_orig=$(basename "$PATH_TRANSLATED")
 datestr_orig=${datestr_orig%%.log}
 datestr_new=$(date -d "$datestr_orig" +"%b %d" 2>&1)
 
+cat "$PATH_TRANSLATED" | \
 case "$QUERY_STRING" in
     *nojoins* | *noparts* | *noquits* )
-        sed "/^\[[[:digit:]]\{2\}:[[:digit:]]\{2\}:[[:digit:]]\{2\}\] \*\*\* \(Joins\|Parts\|Quits\): /d" "$PATH_TRANSLATED" 2>&1 | \
-        sed "s/\[\([[:digit:]]\{2\}:[[:digit:]]\{2\}:[[:digit:]]\{2\}\)\]/${datestr_new} \1/" | \
-        # We need to explicitly set `-o /dev/stdout`, or else pygmentize will cut off most of the output for some reason
-        pygmentize -l irc -O full,style=$PYGMENTS_STYLE -f html -o /dev/stdout
+        # Filter out all lines that contain '*** Joins:' etc.
+        sed "/^\[[[:digit:]]\{2\}:[[:digit:]]\{2\}:[[:digit:]]\{2\}\] \*\*\* \(Joins\|Parts\|Quits\): /d" 2>&1
         ;;
+
     * )
-        sed "s/\[\([[:digit:]]\{2\}:[[:digit:]]\{2\}:[[:digit:]]\{2\}\)\]/${datestr_new} \1/" "$PATH_TRANSLATED" | \
-        # We need to explicitly set `-o /dev/stdout`, or else pygmentize will cut off most of the output for some reason
-        pygmentize -l irc -O full,style=$PYGMENTS_STYLE -f html -o /dev/stdout
+        # Pass through all lines unchanged (which isn't done implicitly, so we need cat)
+        cat
         ;;
-esac
+esac | \
+sed "s/\[\([[:digit:]]\{2\}:[[:digit:]]\{2\}:[[:digit:]]\{2\}\)\]/${datestr_new} \1/" | \
+# We need to explicitly set `-o /dev/stdout`, or else pygmentize will cut off most of the output for some reason
+pygmentize -l irc -O full,style=$PYGMENTS_STYLE -f html -o /dev/stdout
