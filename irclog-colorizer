@@ -5,9 +5,20 @@ PYGMENTS_STYLE=fruity
 echo 'Content-type: text/html'
 echo ''
 
+command_exists () {
+    command -v "$@" > /dev/null 2>&1
+}
+
+PATH="$PATH:/usr/local/bin"
+
+if command_exists gdate
+then date_cmd="gdate"
+else date_cmd="date"
+fi
+
 datestr_orig=$(basename "$PATH_TRANSLATED")
 datestr_orig=${datestr_orig%%.log}
-datestr_new=$(date -d "$datestr_orig" +"%b %d" 2>&1)
+datestr_new=$("$date_cmd" -d "$datestr_orig" +"%b %d" 2>&1)
 
 cat "$PATH_TRANSLATED" | \
 case "$QUERY_STRING" in
